@@ -78,19 +78,19 @@ resource "aws_security_group" "sonarqube-sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["<public IP>", "<public IP>", "<public IP>"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
       from_port   = 9276
       to_port     = 9276
       protocol    = "tcp"
-      cidr_blocks = ["<public IP>", "<public IP>", "<public IP>"]
+      cidr_blocks = ["0.0.0.0/0"]
     }
   ingress {
       from_port   = 2879
       to_port     = 2879
       protocol    = "tcp"
-      cidr_blocks = ["<public IP>", "<public IP>", "<public IP>"]
+      cidr_blocks = ["0.0.0.0/0"]
   }
   egress {
     from_port       = 0
@@ -135,7 +135,6 @@ resource "aws_db_instance" "sonarqube-db" {
   maintenance_window = "sun:00:00-sun:01:00"
   storage_encrypted = "true"
   port = "2879"
-  monitoring = "true"
   depends_on = ["aws_db_subnet_group.SonarQube-DBSNG", "aws_db_parameter_group.sonarqube-db-pg"]
   tags {
     Name = "SonarQube-DB"
