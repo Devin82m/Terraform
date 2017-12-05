@@ -78,19 +78,19 @@ resource "aws_security_group" "sonarqube-sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
+    cidr_blocks = ["<public IP>", "<public IP>", "<public IP>"]
   }
   ingress {
       from_port   = 9276
       to_port     = 9276
       protocol    = "tcp"
-      cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
+      cidr_blocks = ["<public IP>", "<public IP>", "<public IP>"]
     }
   ingress {
       from_port   = 2879
       to_port     = 2879
       protocol    = "tcp"
-      cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
+      cidr_blocks = ["<public IP>", "<public IP>", "<public IP>"]
   }
   egress {
     from_port       = 0
