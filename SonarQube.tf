@@ -19,7 +19,7 @@ resource "aws_vpc" "corp" {
 resource "aws_internet_gateway" "corp-igw" {
 	vpc_id = "${aws_vpc.corp.id}"
   tags {
-    Name = "Crop Internet Gateway"
+    Name = "Corp Internet Gateway"
     Envrionment = "Corp"
   }
   depends_on = ["aws_vpc.corp"]
