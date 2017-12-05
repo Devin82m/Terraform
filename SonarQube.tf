@@ -50,7 +50,7 @@ resource "aws_subnet" "Corp-Public-1a" {
   cidr_block            = "10.0.3.0/24"
   availability_zone       = "us-east-1a"
   tags {
-    Name = "Corp Private"
+    Name = "Corp Public"
     Environment = "Corp"
   }
 }
@@ -74,32 +74,28 @@ resource "aws_security_group" "sonarqube-sg" {
   name        = "sonarqube-sg"
   description = "Only corporate traffic to SonarQube"
   vpc_id      = "${aws_vpc.corp.id}"
-
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
   }
-
-ingress {
-    from_port   = 9276
-    to_port     = 9276
-    protocol    = "tcp"
-    cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
+  ingress {
+      from_port   = 9276
+      to_port     = 9276
+      protocol    = "tcp"
+      cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
+    }
+  ingress {
+      from_port   = 2879
+      to_port     = 2879
+      protocol    = "tcp"
+      cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
   }
-
-ingress {
-    from_port   = 2879
-    to_port     = 2879
-    protocol    = "tcp"
-    cidr_blocks = ["38.140.26.74/32", "209.210.189.44/32", "24.242.83.77/32"]
-  }
-
   egress {
     from_port       = 0
     to_port         = 0
-    protocol        = "tcp"
+    protocol        = "-1"
     cidr_blocks     = ["0.0.0.0/0"]
   }
   depends_on = ["aws_subnet.Corp-Private-1a"]
@@ -118,6 +114,11 @@ resource "aws_db_subnet_group" "SonarQube-DBSNG" {
   }
 }
 
+resource "aws_db_parameter_group" "sonarqube-db-pg" {
+  name   = "sonarqube-db-pg"
+  family = "mysql5.7"
+}
+
 resource "aws_db_instance" "sonarqube-db" {
   allocated_storage    = "100"
   storage_type         = "gp2"
@@ -126,15 +127,16 @@ resource "aws_db_instance" "sonarqube-db" {
   instance_class       = "db.m4.large"
   name                 = "sonar"
   username             = "sonarqube"
-  password             = "baOZhJy0&5FWn6MD*COw1PAg"
+  password             = "Fd345Bqbzgd43"
   db_subnet_group_name = "sonarqube-dbsng"
-  parameter_group_name = "sonarqube-db.mysql5.7"
+  parameter_group_name = "sonarqube-db-pg"
   multi_az = "true"
   backup_retention_period = 7
   maintenance_window = "sun:00:00-sun:01:00"
   storage_encrypted = "true"
   port = "2879"
-  depends_on = ["aws_db_subnet_group.SonarQube-DBSNG"]
+  monitoring = "true"
+  depends_on = ["aws_db_subnet_group.SonarQube-DBSNG", "aws_db_parameter_group.sonarqube-db-pg"]
   tags {
     Name = "SonarQube-DB"
     Environment = "Corp"
@@ -150,22 +152,22 @@ resource "aws_instance" "SonarQube-Web" {
   subnet_id = "${aws_subnet.Corp-Public-1a.id}"
   disable_api_termination = "true"
   availability_zone = "us-east-1a"
-  security_groups = ["aws_security_group.sonarqube-db"]
+  security_groups = ["${aws_security_group.sonarqube-sg.id}"]
   key_name = "SonarQubeKey"
   monitoring = "true"
   user_data = "${file("sonarqubeinstall.sh")}"
   ebs_block_device {
-    device_name = "/dev/sda"
+    device_name = "/dev/xvda"
     volume_size = 100
     volume_type = "gp2"
-    encrypted = "true"
+    #encrypted = "true"
     delete_on_termination = false
   }
   tags {
     Name = "SonarQube"
     Environment = "Corp"
   }
-  depends_on = ["aws_db_instance.sonarqube-db"]
+  depends_on = ["aws_db_instance.sonarqube-db", "aws_security_group.sonarqube-sg"]
 }
 
 resource "aws_eip" "SonarQube-EIP" {
